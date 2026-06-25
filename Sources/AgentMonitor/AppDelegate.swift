@@ -97,6 +97,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         service.popoverOpen = true
         Task { await service.refreshNow() } // fresh data immediately on open
+        // No window shadow during the slide — it would sit at the full frame while the
+        // content animates. Re-enable it once the panel settles.
+        panel.hasShadow = false
         panel.setFrame(shown, display: true)
         panel.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -106,12 +109,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if let layer = panel.contentView?.layer {
             layer.removeAnimation(forKey: "slide")
             layer.transform = CATransform3DIdentity
+            CATransaction.begin()
+            CATransaction.setCompletionBlock { [weak panel] in
+                MainActor.assumeIsolated { panel?.hasShadow = true }
+            }
             let slide = CABasicAnimation(keyPath: "transform.translation.y")
             slide.fromValue = size.height   // start shifted up (clipped by the window), then drop in
             slide.toValue = 0
             slide.duration = 0.18
             slide.timingFunction = CAMediaTimingFunction(name: .easeOut)
             layer.add(slide, forKey: "slide")
+            CATransaction.commit()
         }
         // Esc closes while open.
         escMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -129,6 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if let escMonitor { NSEvent.removeMonitor(escMonitor); self.escMonitor = nil }
         if let clickMonitor { NSEvent.removeMonitor(clickMonitor); self.clickMonitor = nil }
         guard let panel, panel.isVisible, let layer = panel.contentView?.layer else { panel?.orderOut(nil); return }
+        panel.hasShadow = false // avoid the shadow lingering at the frame during slide-up
         // Slide the content back up behind the bar, then hide.
         CATransaction.begin()
         CATransaction.setCompletionBlock { [weak panel] in
