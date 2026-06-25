@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#
+# make-app.sh — package AgentMonitor into a double-clickable, menu-bar-only .app bundle.
+#
+#   ./scripts/make-app.sh            # release build (default)
+#   ./scripts/make-app.sh debug      # debug build
+#
+# Produces ./AgentMonitor.app — open it (or double-click) to run. No Dock icon;
+# look for the radiowaves icon in the menu bar (top-right).
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+CONFIG="${1:-release}"
+echo "Building AgentMonitor ($CONFIG)…"
+swift build -c "$CONFIG"
+BIN="$(swift build -c "$CONFIG" --show-bin-path)/AgentMonitor"
+[ -x "$BIN" ] || { echo "error: built binary not found at $BIN" >&2; exit 1; }
+
+APP="AgentMonitor.app"
+rm -rf "$APP"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+cp "$BIN" "$APP/Contents/MacOS/AgentMonitor"
+
+cat > "$APP/Contents/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key><string>AgentMonitor</string>
+  <key>CFBundleDisplayName</key><string>Agent Monitor</string>
+  <key>CFBundleIdentifier</key><string>xyz.joystudios.agent-monitor</string>
+  <key>CFBundleExecutable</key><string>AgentMonitor</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>0.1.0</string>
+  <key>CFBundleVersion</key><string>1</string>
+  <key>LSMinimumSystemVersion</key><string>14.0</string>
+  <key>LSUIElement</key><true/>
+  <key>NSHighResolutionCapable</key><true/>
+</dict>
+</plist>
+PLIST
+
+# Ad-hoc sign for local personal use (no Developer ID required to run it yourself).
+codesign --force --deep --sign - "$APP" >/dev/null 2>&1 || echo "note: ad-hoc codesign skipped"
+
+echo "Built: $(pwd)/$APP"
+echo "Run it with:  open \"$(pwd)/$APP\"   (icon appears in the menu bar, not the Dock)"
