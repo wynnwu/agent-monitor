@@ -105,7 +105,7 @@ The Swift app does not exist yet — M0 creates it. Two viable setups:
   ```
 - **SwiftPM executable (agent-friendly, no .xcodeproj):** `swift build` / `swift run`; set `.accessory` activation policy in code instead of an Info.plist. Good if you want everything buildable from the CLI.
 
-**Decision (M0): SwiftPM executable** (no `.xcodeproj`). Build `swift build`; run `swift run AgentMonitor`; test `swift test`. `.accessory` activation policy is set in code (`AgentMonitorApp`). Layout: pure, fully-tested logic in the `AgentMonitorCore` library target; IO + SwiftUI in the `AgentMonitor` executable; unit tests in `AgentMonitorCoreTests`. Chosen UI = **"Triage"** (see `docs/superpowers/specs/2026-06-25-agent-monitor-design.md`; build plan in `docs/superpowers/plans/`).
+**Decision (M0): SwiftPM executable** (no `.xcodeproj`). Build `swift build`; run `swift run AgentMonitor`; test `swift test`. `.accessory` activation policy is set in code (`AgentMonitorApp`). Layout: pure, fully-tested logic in the `AgentMonitorCore` library target; IO + SwiftUI in the `AgentMonitor` executable; unit tests in `AgentMonitorCoreTests`. UI: a centered, glass menu-bar dropdown with three columns — **Idle / Waiting for you / Working** (see `README.md`).
 
 Validate the data layer directly with:
 ```bash

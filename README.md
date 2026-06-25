@@ -81,7 +81,6 @@ The shell script mirrors what the app's services do:
 
 ```
 docs/DISCOVERY.md          how to observe Claude Code agents (read this first)
-docs/superpowers/          design spec + implementation plan
 scripts/agent-snapshot.sh  shell reference of the core data access
 scripts/make-app.sh        package the .app bundle
 Sources/AgentMonitorCore/  pure, tested logic (models, parser, grouping, formatting)
