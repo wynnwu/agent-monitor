@@ -17,7 +17,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var statusItem: NSStatusItem!
     private var panel: DropdownPanel?
     private var hosting: NSView?
+    private var shadowHost: NSView?
+    private var glass: NSView?
     private var hotKey: GlobalHotKey?
+    private let panelMargin: CGFloat = 30 // room around the content for the soft shadow
     private var escMonitor: Any?
     private var clickMonitor: Any?
     private var transcriptWindows: [String: NSWindow] = [:]
@@ -51,27 +54,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         panel.level = .statusBar
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = true
+        panel.hasShadow = false // we draw our own fadeable, borderless shadow on the content
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
-        // Glass: a vibrancy blur behind the (translucent) SwiftUI content, rounded at the bottom.
+        // Glass: a vibrancy blur behind the translucent SwiftUI content. NSVisualEffectView
+        // ignores layer cornerRadius, so shape its bottom corners with a mask image.
         let blur = NSVisualEffectView()
         blur.material = .popover
         blur.blendingMode = .behindWindow
         blur.state = .active
         blur.appearance = NSAppearance(named: .darkAqua)
-        blur.wantsLayer = true
-        blur.layer?.cornerRadius = 14
-        blur.layer?.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner] // bottom corners
-        blur.layer?.masksToBounds = true
-        hosting.translatesAutoresizingMaskIntoConstraints = true
-        hosting.frame = blur.bounds
+        blur.maskImage = Self.bottomRoundedMask(radius: 14)
+        blur.autoresizingMask = [.width, .height]
         hosting.autoresizingMask = [.width, .height]
         blur.addSubview(hosting)
-        panel.contentView = blur
+
+        // shadowHost carries a soft drop shadow we can fade in/out and slide.
+        let shadowHost = NSView()
+        shadowHost.wantsLayer = true
+        shadowHost.layer?.shadowColor = NSColor.black.cgColor
+        shadowHost.layer?.shadowOffset = CGSize(width: 0, height: -6)
+        shadowHost.layer?.shadowRadius = 18
+        shadowHost.layer?.shadowOpacity = 0
+        shadowHost.addSubview(blur)
+
+        let container = NSView()
+        container.addSubview(shadowHost)
+        panel.contentView = container
+
         self.hosting = hosting
+        self.glass = blur
+        self.shadowHost = shadowHost
         self.panel = panel
 
         applyHotKey()
@@ -86,40 +101,47 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func showPopover() {
-        guard let panel, let hosting else { return }
+        guard let panel, let hosting, let shadowHost, let glass else { return }
         hosting.layoutSubtreeIfNeeded()
-        var size = hosting.fittingSize
-        if size.width < 100 || size.height < 100 { size = NSSize(width: 902, height: 420) } // fallback
+        var content = hosting.fittingSize
+        if content.width < 100 || content.height < 100 { content = NSSize(width: 902, height: 420) } // fallback
         guard let screen = NSScreen.main ?? NSScreen.screens.first else { return }
-        let x = screen.frame.midX - size.width / 2
-        let topY = screen.visibleFrame.maxY                 // bottom of the menu bar
-        let shown = NSRect(x: x, y: topY - size.height, width: size.width, height: size.height)
+        let m = panelMargin
+        let winW = content.width + 2 * m
+        let winH = content.height + m                 // top flush at the bar; margin on sides + bottom
+        let x = screen.frame.midX - winW / 2
+        let topY = screen.visibleFrame.maxY
+        let winFrame = NSRect(x: x, y: topY - winH, width: winW, height: winH)
 
         service.popoverOpen = true
         Task { await service.refreshNow() } // fresh data immediately on open
-        // No window shadow during the slide — it would sit at the full frame while the
-        // content animates. Re-enable it once the panel settles.
-        panel.hasShadow = false
-        panel.setFrame(shown, display: true)
+        panel.setFrame(winFrame, display: true)
+        shadowHost.frame = NSRect(x: m, y: m, width: content.width, height: content.height)
+        glass.frame = shadowHost.bounds
+        hosting.frame = glass.bounds
+        shadowHost.layer?.shadowPath = CGPath(roundedRect: CGRect(origin: .zero, size: content),
+                                              cornerWidth: 14, cornerHeight: 14, transform: nil)
         panel.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
 
-        // Slide the content down from behind the bar via explicit Core Animation
-        // (window-frame animation is silently disabled under Reduce Motion).
-        if let layer = panel.contentView?.layer {
-            layer.removeAnimation(forKey: "slide")
+        // Slide the content down from behind the bar and fade the shadow in. Explicit Core
+        // Animation — window-frame animation is silently disabled under Reduce Motion.
+        if let layer = shadowHost.layer {
+            layer.removeAnimation(forKey: "slide"); layer.removeAnimation(forKey: "shadow")
             layer.transform = CATransform3DIdentity
-            CATransaction.begin()
-            CATransaction.setCompletionBlock { [weak panel] in
-                MainActor.assumeIsolated { panel?.hasShadow = true }
-            }
+            layer.shadowOpacity = 0.5
             let slide = CABasicAnimation(keyPath: "transform.translation.y")
-            slide.fromValue = size.height   // start shifted up (clipped by the window), then drop in
+            slide.fromValue = content.height
             slide.toValue = 0
             slide.duration = 0.18
             slide.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            let fade = CABasicAnimation(keyPath: "shadowOpacity")
+            fade.fromValue = 0
+            fade.toValue = 0.5
+            fade.duration = 0.26
+            fade.timingFunction = CAMediaTimingFunction(name: .easeOut)
             layer.add(slide, forKey: "slide")
-            CATransaction.commit()
+            layer.add(fade, forKey: "shadow")
         }
         // Esc closes while open.
         escMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -136,22 +158,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         service.popoverOpen = false
         if let escMonitor { NSEvent.removeMonitor(escMonitor); self.escMonitor = nil }
         if let clickMonitor { NSEvent.removeMonitor(clickMonitor); self.clickMonitor = nil }
-        guard let panel, panel.isVisible, let layer = panel.contentView?.layer else { panel?.orderOut(nil); return }
-        panel.hasShadow = false // avoid the shadow lingering at the frame during slide-up
-        // Slide the content back up behind the bar, then hide.
+        guard let panel, panel.isVisible, let shadowHost, let layer = shadowHost.layer else { panel?.orderOut(nil); return }
+        let h = shadowHost.frame.height
+        // Slide the content back up behind the bar and fade the shadow out, then hide.
         CATransaction.begin()
         CATransaction.setCompletionBlock { [weak panel] in
             MainActor.assumeIsolated { panel?.orderOut(nil) }
         }
+        layer.transform = CATransform3DMakeTranslation(0, h, 0)
+        layer.shadowOpacity = 0
         let slide = CABasicAnimation(keyPath: "transform.translation.y")
         slide.fromValue = 0
-        slide.toValue = panel.frame.height
+        slide.toValue = h
         slide.duration = 0.14
         slide.timingFunction = CAMediaTimingFunction(name: .easeIn)
-        slide.fillMode = .forwards
-        slide.isRemovedOnCompletion = false
+        let fade = CABasicAnimation(keyPath: "shadowOpacity")
+        fade.fromValue = 0.5
+        fade.toValue = 0
+        fade.duration = 0.12
         layer.add(slide, forKey: "slide")
+        layer.add(fade, forKey: "shadow")
         CATransaction.commit()
+    }
+
+    /// A black mask whose bottom corners are rounded and top corners square (for the glass).
+    static func bottomRoundedMask(radius r: CGFloat) -> NSImage {
+        let d = r * 2 + 1
+        let image = NSImage(size: NSSize(width: d, height: d))
+        image.lockFocus()
+        NSColor.black.setFill()
+        // Draw a rounded rect extending above the canvas so only the bottom corners round.
+        NSBezierPath(roundedRect: NSRect(x: 0, y: 0, width: d, height: d + r), xRadius: r, yRadius: r).fill()
+        image.unlockFocus()
+        image.capInsets = NSEdgeInsets(top: r, left: r, bottom: r, right: r)
+        image.resizingMode = .stretch
+        return image
     }
 
     // MARK: - Transcript windows

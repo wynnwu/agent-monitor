@@ -60,7 +60,7 @@ struct SessionListView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .frame(height: listHeight)
             } else if scrollable {
-                ScrollView { rows(items, bucket) }
+                OverlayScrollView { rows(items, bucket) }
                     .frame(height: listHeight)
             } else {
                 rows(Array(items.prefix(visibleRows)), bucket)

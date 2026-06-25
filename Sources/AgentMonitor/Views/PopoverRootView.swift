@@ -54,5 +54,7 @@ struct PopoverRootView: View {
                 .frame(height: 12)
                 .allowsHitTesting(false)
         }
+        .clipShape(UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: 14,
+                                          bottomTrailingRadius: 14, topTrailingRadius: 0))
     }
 }
