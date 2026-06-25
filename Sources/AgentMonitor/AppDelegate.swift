@@ -110,7 +110,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let winW = content.width + 2 * m
         let winH = content.height + m                 // top flush at the bar; margin on sides + bottom
         let x = screen.frame.midX - winW / 2
-        let topY = screen.visibleFrame.maxY
+        let topY = screen.visibleFrame.maxY + 1 // overlap the menu bar slightly to avoid a hairline gap
         let winFrame = NSRect(x: x, y: topY - winH, width: winW, height: winH)
 
         service.popoverOpen = true
