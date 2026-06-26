@@ -12,7 +12,7 @@ cd "$(dirname "$0")/.."
 ./scripts/make-app.sh release
 
 APP="AgentM.app"
-VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist" 2>/dev/null || echo 0.1.0)"
+VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist" 2>/dev/null || echo 0.1.1)"
 DMG="AgentM-${VERSION}.dmg"
 
 STAGE="$(mktemp -d)/dmg"

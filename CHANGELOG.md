@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-06-26
+
+### Added
+- An app icon, shown in Finder and on the `.dmg`.
+- List rows: the prompt now wraps to two lines, and the git-branch pill is larger.
+
+### Changed
+- Renamed the app and bundle to **Agent M** (bundle id `xyz.joystudios.agent-m`).
+- Detail window: the git branch moved to a top-right pill (matching the list), and the
+  metadata line (model · kind · pid · uptime · id) is larger.
+- The default global shortcut is now **⌥M** (still opt-in / disabled by default).
+
 ## [0.1.0] - 2026-06-26
 
 First release.
@@ -25,4 +37,5 @@ First release.
 - `AgentMCore` library (models, JSONL parser, status grouping, formatting) with unit tests.
 - `scripts/make-app.sh` to package a double-clickable, menu-bar-only `.app`.
 
+[0.1.1]: https://github.com/wynnwu/agent-m/releases/tag/v0.1.1
 [0.1.0]: https://github.com/wynnwu/agent-m/releases/tag/v0.1.0
