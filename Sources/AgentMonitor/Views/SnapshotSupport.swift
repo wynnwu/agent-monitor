@@ -219,6 +219,30 @@ enum SnapshotSupport {
         write(scene, to: path)
     }
 
+    /// Render a 1024×1024 app icon (squircle with margin + the radiowaves glyph).
+    static func renderIcon(to path: String) {
+        let size: CGFloat = 1024
+        let icon = ZStack {
+            RoundedRectangle(cornerRadius: size * 0.82 * 0.2237, style: .continuous)
+                .fill(LinearGradient(colors: [Color(red: 0.22, green: 0.56, blue: 1.0),
+                                              Color(red: 0.03, green: 0.13, blue: 0.42)],
+                                     startPoint: .topLeading, endPoint: .bottomTrailing))
+                .frame(width: size * 0.82, height: size * 0.82)
+                .shadow(color: .black.opacity(0.28), radius: size * 0.03, y: size * 0.015)
+            Image(systemName: "dot.radiowaves.left.and.right")
+                .font(.system(size: size * 0.36, weight: .semibold))
+                .foregroundStyle(.white)
+        }
+        .frame(width: size, height: size)
+
+        let renderer = ImageRenderer(content: icon)
+        renderer.scale = 1
+        guard let img = renderer.nsImage, let tiff = img.tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff),
+              let png = rep.representation(using: .png, properties: [:]) else { return }
+        try? png.write(to: URL(fileURLWithPath: path))
+    }
+
     private static func write<V: View>(_ view: V, to path: String) {
         let renderer = ImageRenderer(content: view)
         renderer.scale = 2

@@ -25,6 +25,9 @@ struct AgentMonitorApp: App {
         if let i = args.firstIndex(of: "--snapshot-dropdown"), i + 1 < args.count {
             SnapshotSupport.renderDropdown(to: args[i + 1]); exit(0)
         }
+        if let i = args.firstIndex(of: "--make-icon"), i + 1 < args.count {
+            SnapshotSupport.renderIcon(to: args[i + 1]); exit(0)
+        }
         if let i = args.firstIndex(of: "--count-transcript"), i + 1 < args.count {
             let store = TranscriptStore(sessionID: args[i + 1])
             store.load()

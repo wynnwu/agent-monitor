@@ -1,10 +1,23 @@
+<div align="center">
+
+<img src="docs/images/icon.png" width="128" alt="Agent Monitor app icon">
+
 # Agent Monitor
 
-A small, native macOS menu-bar app to see every **Claude Code** session running on your Mac — what each is working on, and which ones are waiting on you — all locally, no network.
+**See every Claude Code session running on your Mac at a glance — what each is working on, and which ones need you.**
 
-<p align="center">
-  <img src="docs/images/popover.png" width="820" alt="Agent Monitor dropdown: Idle / Waiting for you / Working columns">
-</p>
+A small, native macOS menu-bar app. Local-first and read-only: it reads the on-disk session data
+Claude Code already writes, never touches the network, and never writes to `~/.claude/`.
+
+[![Download Agent Monitor for macOS](https://img.shields.io/badge/Download_Latest-0A84FF?style=for-the-badge&logo=apple&logoColor=white)](../../releases/latest)
+
+**macOS 14 (Sonoma) or later · requires a `claude` binary** · unsigned build (see [Install](#install))
+
+<img src="docs/images/popover.png" width="820" alt="Agent Monitor dropdown: Idle / Waiting for you / Working columns">
+
+</div>
+
+---
 
 > Screenshots use fictional sample data. The live app shows your actual sessions.
 
@@ -32,21 +45,20 @@ Click any row to open its **transcript window** — a dark, readable view of the
 
 Off by default. Open **Settings** (the gear in the dropdown footer), enable it, and record a key combo to toggle the dropdown from anywhere; press it again, click away, or hit **Esc** to dismiss.
 
-## Build & run
+## Install
 
-SwiftPM executable — no Xcode project needed:
+**Download (recommended).** Get the latest `.dmg` from the [Releases](../../releases/latest) page,
+open it, and drag **Agent Monitor** into Applications. It's an unsigned build, so the first launch
+needs **right-click → Open** (or run `xattr -dr com.apple.quarantine /Applications/AgentMonitor.app`).
+It lives in the menu bar — look for the radiowaves icon; there's no Dock icon.
 
-```bash
-swift build            # compile
-swift run AgentMonitor # launch (status-bar only; no Dock icon)
-swift test             # run the unit suite (parser, grouping, decoding, polling)
-```
-
-To install it as a double-clickable, menu-bar-only `.app`:
+**Build from source.** SwiftPM, no Xcode project needed:
 
 ```bash
-./scripts/make-app.sh   # builds AgentMonitor.app (ad-hoc signed, LSUIElement)
-open AgentMonitor.app
+swift run AgentMonitor   # launch (status-bar only; no Dock icon)
+swift test               # run the unit suite (parser, grouping, decoding, polling)
+./scripts/make-app.sh    # package AgentMonitor.app
+./scripts/make-dmg.sh    # package AgentMonitor-<version>.dmg
 ```
 
 Requires **macOS 14+** and a `claude` binary (resolved from `~/.local/bin`, Homebrew, `/usr/local/bin`, or `~/.claude/local`). No third-party dependencies.
@@ -83,6 +95,7 @@ The shell script mirrors what the app's services do:
 docs/DISCOVERY.md          how to observe Claude Code agents (read this first)
 scripts/agent-snapshot.sh  shell reference of the core data access
 scripts/make-app.sh        package the .app bundle
+scripts/make-dmg.sh        package the .dmg for distribution
 Sources/AgentMonitorCore/  pure, tested logic (models, parser, grouping, formatting)
 Sources/AgentMonitor/      SwiftUI app + IO services
 Tests/                     unit tests + JSONL fixtures

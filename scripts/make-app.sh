@@ -33,12 +33,23 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>0.1.0</string>
   <key>CFBundleVersion</key><string>1</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>
 </dict>
 </plist>
 PLIST
+
+# Build AppIcon.icns from docs/images/icon.png.
+if [ -f docs/images/icon.png ]; then
+  ICONSET="$(mktemp -d)/AppIcon.iconset"; mkdir -p "$ICONSET"
+  for s in 16 32 128 256 512; do
+    sips -z "$s" "$s" docs/images/icon.png --out "$ICONSET/icon_${s}x${s}.png" >/dev/null
+    sips -z "$((s * 2))" "$((s * 2))" docs/images/icon.png --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
+  done
+  iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
+fi
 
 # Ad-hoc sign for local personal use (no Developer ID required to run it yourself).
 codesign --force --deep --sign - "$APP" >/dev/null 2>&1 || echo "note: ad-hoc codesign skipped"
