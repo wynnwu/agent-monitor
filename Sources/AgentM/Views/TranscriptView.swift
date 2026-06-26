@@ -63,7 +63,6 @@ struct TranscriptWindowBody: View {
     private var metaLine: String {
         var parts: [String] = []
         if let m = records.last(where: { $0.role == .assistant })?.model { parts.append(prettyModel(m)) }
-        if let b = target.branch { parts.append(b) }
         parts.append(target.kind)
         if let pid = target.pid { parts.append("pid \(pid)") }
         if let s = target.startedAt { parts.append("up " + relativeTime(from: Date(timeIntervalSince1970: s / 1000), now: Date())) }
@@ -74,11 +73,15 @@ struct TranscriptWindowBody: View {
     var body: some View {
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 8) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(target.folder).font(.system(size: 18, weight: .semibold))
-                    Text(target.parent).font(.system(size: 13)).foregroundStyle(.secondary).lineLimit(1)
-                    Text(metaLine).font(.system(size: 12)).foregroundStyle(.tertiary)
-                        .lineLimit(1).truncationMode(.tail).textSelection(.enabled)
+                HStack(alignment: .top, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(target.folder).font(.system(size: 18, weight: .semibold))
+                        Text(target.parent).font(.system(size: 13)).foregroundStyle(.secondary).lineLimit(1)
+                        Text(metaLine).font(.system(size: 14)).foregroundStyle(.tertiary)
+                            .lineLimit(1).truncationMode(.tail).textSelection(.enabled)
+                    }
+                    Spacer(minLength: 8)
+                    if let b = target.branch { BranchPill(name: b) }
                 }
                 HStack(spacing: 0) {
                     ForEach(TranscriptFilter.allCases) { f in

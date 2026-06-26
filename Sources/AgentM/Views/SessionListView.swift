@@ -12,7 +12,7 @@ struct SessionListView: View {
     var scrollable: Bool = true
 
     private let columnWidth: CGFloat = 300
-    private let rowHeight: CGFloat = 78
+    private let rowHeight: CGFloat = 104   // fits a two-line prompt + the branch pill
     private let visibleRows = 5
     private var listHeight: CGFloat { CGFloat(visibleRows) * rowHeight }
     private var totalWidth: CGFloat { columnWidth * 3 + 2 }

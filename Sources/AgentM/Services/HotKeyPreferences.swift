@@ -21,9 +21,9 @@ final class HotKeyPreferences {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         enabled = defaults.bool(forKey: K.enabled) // default false
-        keyCode = UInt32(defaults.object(forKey: K.keyCode) as? Int ?? Int(kVK_ANSI_A))
-        modifiers = UInt32(defaults.object(forKey: K.modifiers) as? Int ?? Int(controlKey | cmdKey))
-        display = defaults.string(forKey: K.display) ?? "⌃⌘A"
+        keyCode = UInt32(defaults.object(forKey: K.keyCode) as? Int ?? Int(kVK_ANSI_M))
+        modifiers = UInt32(defaults.object(forKey: K.modifiers) as? Int ?? Int(optionKey))
+        display = defaults.string(forKey: K.display) ?? "⌥M"
     }
 
     private let defaults: UserDefaults

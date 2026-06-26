@@ -42,8 +42,8 @@ struct SessionRowView: View {
                                 .font(.system(size: 13)).foregroundStyle(.tertiary).monospacedDigit()
                         }
                     }
-                    Text(promptText).font(.system(size: 15)).foregroundStyle(.secondary).lineLimit(1)
-                    if let branch { branchChip(branch) }
+                    Text(promptText).font(.system(size: 15)).foregroundStyle(.secondary).lineLimit(2)
+                    if let branch { BranchPill(name: branch) }
                 }
             }
             .padding(.horizontal, 14).padding(.vertical, 9)
@@ -53,15 +53,5 @@ struct SessionRowView: View {
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
-    }
-
-    private func branchChip(_ name: String) -> some View {
-        HStack(spacing: 3) {
-            Image(systemName: "arrow.triangle.branch").font(.system(size: 9))
-            Text(name).font(.system(size: 11)).lineLimit(1)
-        }
-        .foregroundStyle(.tertiary)
-        .padding(.horizontal, 5).padding(.vertical, 1)
-        .background(Color.white.opacity(0.07), in: Capsule())
     }
 }
