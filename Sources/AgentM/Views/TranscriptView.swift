@@ -1,5 +1,5 @@
 import SwiftUI
-import AgentMonitorCore
+import AgentMCore
 
 /// What a transcript window needs to know, captured when it's opened.
 struct TranscriptTarget: Codable, Hashable {

@@ -1,6 +1,6 @@
 # Discovery: Observing local Claude Code agents
 
-How a separate process can see **what Claude Code sessions are running on this Mac** and **read their conversations**. This is the data foundation for Agent Monitor.
+How a separate process can see **what Claude Code sessions are running on this Mac** and **read their conversations**. This is the data foundation for Agent M.
 
 Verified on macOS (Darwin 24.6), Claude Code `2.1.x` (versions `2.1.158` and `2.1.191` installed), June 2026.
 

@@ -1,5 +1,5 @@
 import XCTest
-@testable import AgentMonitorCore
+@testable import AgentMCore
 
 final class SessionGroupingTests: XCTestCase {
     func mk(_ id: String, _ kind: AgentSession.Kind, status: AgentSession.Status? = nil,

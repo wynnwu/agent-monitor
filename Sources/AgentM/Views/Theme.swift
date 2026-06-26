@@ -1,5 +1,5 @@
 import SwiftUI
-import AgentMonitorCore
+import AgentMCore
 
 enum Theme {
     static let waitingForYou = Color(red: 0.96, green: 0.63, blue: 0.14) // #F5A623 (amber)

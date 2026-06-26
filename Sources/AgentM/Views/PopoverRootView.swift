@@ -1,5 +1,5 @@
 import SwiftUI
-import AgentMonitorCore
+import AgentMCore
 
 /// The dropdown's content: the live session list plus a footer.
 /// Reads `service` and `prefs` (@Observable) so it updates as they change.

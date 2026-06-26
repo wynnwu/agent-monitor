@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# agent-snapshot.sh — reference implementation of Agent Monitor's core data access.
+# agent-snapshot.sh — reference implementation of Agent M's core data access.
 # Mirrors what the Swift app does, so behavior can be validated from the shell.
 #
 #   ./agent-snapshot.sh                      list all sessions + status + transcript path

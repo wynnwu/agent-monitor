@@ -1,5 +1,5 @@
 import XCTest
-@testable import AgentMonitorCore
+@testable import AgentMCore
 
 final class RelativeTimeTests: XCTestCase {
     let now = Date(timeIntervalSince1970: 1_780_000_000)

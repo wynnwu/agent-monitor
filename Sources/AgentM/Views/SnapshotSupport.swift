@@ -1,5 +1,5 @@
 import SwiftUI
-import AgentMonitorCore
+import AgentMCore
 
 /// Renders the popover to a PNG. Sample data below is entirely fictional — used for
 /// README screenshots and design verification (no real local sessions).
@@ -162,7 +162,7 @@ enum SnapshotSupport {
     }
 
     static func renderSettings(to path: String) {
-        let prefs = HotKeyPreferences(defaults: UserDefaults(suiteName: "agent-monitor.snapshot") ?? .standard)
+        let prefs = HotKeyPreferences(defaults: UserDefaults(suiteName: "agent-m.snapshot") ?? .standard)
         prefs.enabled = true
         write(SettingsView(prefs: prefs), to: path)
     }

@@ -1,5 +1,5 @@
 import SwiftUI
-import AgentMonitorCore
+import AgentMCore
 
 struct SessionRowView: View {
     let session: AgentSession

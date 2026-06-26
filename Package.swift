@@ -2,17 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "AgentMonitor",
+    name: "AgentM",
     platforms: [.macOS(.v14)],
     targets: [
-        .target(name: "AgentMonitorCore"),
+        .target(name: "AgentMCore"),
         .executableTarget(
-            name: "AgentMonitor",
-            dependencies: ["AgentMonitorCore"]
+            name: "AgentM",
+            dependencies: ["AgentMCore"]
         ),
         .testTarget(
-            name: "AgentMonitorCoreTests",
-            dependencies: ["AgentMonitorCore"],
+            name: "AgentMCoreTests",
+            dependencies: ["AgentMCore"],
             resources: [.copy("Fixtures")]
         ),
     ]

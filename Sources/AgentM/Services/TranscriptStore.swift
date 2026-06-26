@@ -1,7 +1,7 @@
 import Foundation
 import Dispatch
 import Observation
-import AgentMonitorCore
+import AgentMCore
 
 @MainActor
 @Observable

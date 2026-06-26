@@ -1,5 +1,5 @@
 import XCTest
-@testable import AgentMonitorCore
+@testable import AgentMCore
 
 final class BinaryResolverTests: XCTestCase {
     func test_candidate_order() {

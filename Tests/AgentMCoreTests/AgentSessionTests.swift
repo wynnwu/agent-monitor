@@ -1,5 +1,5 @@
 import XCTest
-@testable import AgentMonitorCore
+@testable import AgentMCore
 
 final class AgentSessionTests: XCTestCase {
     func test_decodes_interactive_entry() {

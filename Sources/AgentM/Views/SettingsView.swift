@@ -18,7 +18,7 @@ struct SettingsView: View {
             .opacity(prefs.enabled ? 1 : 0.4)
             .disabled(!prefs.enabled)
 
-            Text("Press your shortcut from anywhere to toggle the Agent Monitor popover. Press it again, click away, or hit Esc to close. Off by default.")
+            Text("Press your shortcut from anywhere to toggle the Agent M popover. Press it again, click away, or hit Esc to close. Off by default.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

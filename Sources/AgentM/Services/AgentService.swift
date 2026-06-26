@@ -1,6 +1,6 @@
 import Foundation
 import Observation
-import AgentMonitorCore
+import AgentMCore
 
 struct CachedInfo: Sendable {
     let size: UInt64

@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 import Observation
-import AgentMonitorCore
+import AgentMCore
 
 /// Borderless panel that can still become key (so Esc/keys reach it), with a fixed
 /// short slide duration.
@@ -33,7 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
             button.image = NSImage(systemSymbolName: "dot.radiowaves.left.and.right",
-                                   accessibilityDescription: "Agent Monitor")
+                                   accessibilityDescription: "Agent M")
             button.image?.isTemplate = true
             button.imagePosition = .imageOnly
             button.action = #selector(togglePopover)
@@ -265,7 +265,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         let host = NSHostingController(rootView: SettingsView(prefs: prefs))
         let window = NSWindow(contentViewController: host)
-        window.title = "Agent Monitor Settings"
+        window.title = "Agent M Settings"
         window.styleMask = [.titled, .closable]
         window.appearance = NSAppearance(named: .darkAqua)
         window.isReleasedWhenClosed = false

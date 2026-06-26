@@ -1,4 +1,4 @@
-# CLAUDE.md — Agent Monitor
+# CLAUDE.md — Agent M
 
 Context for Claude Code working in this repo. Read `docs/DISCOVERY.md` first — it is the data foundation everything here depends on.
 
@@ -26,7 +26,7 @@ Do **not** add networking, analytics, or third-party packages without being aske
 ## Architecture
 
 ```
-AgentMonitorApp (@main, Settings-only scene)
+AgentMApp (@main, Settings-only scene)
 └── AppDelegate (@NSApplicationDelegateAdaptor)            ← owns the menu-bar surface
     ├── NSStatusItem + DropdownPanel → PopoverRootView → SessionListView (3 columns)
     │     (borderless NSPanel centered at top of screen, flush under the menu bar)
@@ -83,13 +83,13 @@ Reading `~/.claude/` (outside an App Sandbox container) and spawning `claude` ma
 ## Project layout (target)
 
 ```
-agent-monitor/
+agent-m/
 ├── CLAUDE.md                 ← this file
 ├── README.md
 ├── docs/DISCOVERY.md         ← data-source reference (read first)
 ├── scripts/agent-snapshot.sh ← shell reference impl of the core data access
-└── AgentMonitor/             ← Swift app (created in M0)
-    ├── AgentMonitorApp.swift
+└── AgentM/             ← Swift app (created in M0)
+    ├── AgentMApp.swift
     ├── Models/   (AgentSession, TranscriptRecord)
     ├── Services/ (ClaudeCLI, AgentService, TranscriptStore, TranscriptParser)
     └── Views/    (SessionListView, SessionRowView, TranscriptView)
@@ -99,13 +99,13 @@ agent-monitor/
 
 The Swift app does not exist yet — M0 creates it. Two viable setups:
 
-- **Xcode project (recommended for a GUI app):** create a macOS App (SwiftUI) target named `AgentMonitor`. Headless builds for verification:
+- **Xcode project (recommended for a GUI app):** create a macOS App (SwiftUI) target named `AgentM`. Headless builds for verification:
   ```bash
-  xcodebuild -scheme AgentMonitor -destination 'platform=macOS' build
+  xcodebuild -scheme AgentM -destination 'platform=macOS' build
   ```
 - **SwiftPM executable (agent-friendly, no .xcodeproj):** `swift build` / `swift run`; set `.accessory` activation policy in code instead of an Info.plist. Good if you want everything buildable from the CLI.
 
-**Decision (M0): SwiftPM executable** (no `.xcodeproj`). Build `swift build`; run `swift run AgentMonitor`; test `swift test`. `.accessory` activation policy is set in code (`AgentMonitorApp`). Layout: pure, fully-tested logic in the `AgentMonitorCore` library target; IO + SwiftUI in the `AgentMonitor` executable; unit tests in `AgentMonitorCoreTests`. UI: a centered, glass menu-bar dropdown with three columns — **Idle / Waiting for you / Working** (see `README.md`).
+**Decision (M0): SwiftPM executable** (no `.xcodeproj`). Build `swift build`; run `swift run AgentM`; test `swift test`. `.accessory` activation policy is set in code (`AgentMApp`). Layout: pure, fully-tested logic in the `AgentMCore` library target; IO + SwiftUI in the `AgentM` executable; unit tests in `AgentMCoreTests`. UI: a centered, glass menu-bar dropdown with three columns — **Idle / Waiting for you / Working** (see `README.md`).
 
 Validate the data layer directly with:
 ```bash
@@ -122,7 +122,7 @@ Validate the data layer directly with:
 
 ## Roadmap
 
-- **M0 — Scaffold.** `git init`; create the `AgentMonitor` app target (Xcode or SPM); `MenuBarExtra` shows a static "Hello" popover; record the build choice here.
+- **M0 — Scaffold.** `git init`; create the `AgentM` app target (Xcode or SPM); `MenuBarExtra` shows a static "Hello" popover; record the build choice here.
 - **M1 — Live list.** `ClaudeCLI` + `AgentService` poll `claude agents --json --all`; popover renders real sessions with status dots and a busy-count badge.
 - **M2 — Transcript viewer.** `TranscriptStore` resolves via glob + reads history; detail window renders user/assistant turns; "Open" from a row works.
 - **M3 — Live follow.** Watch the `.jsonl` with `DispatchSource`; append new turns incrementally; auto-scroll.

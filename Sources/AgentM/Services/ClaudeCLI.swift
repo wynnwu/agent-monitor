@@ -1,5 +1,5 @@
 import Foundation
-import AgentMonitorCore
+import AgentMCore
 
 enum ClaudeCLIError: Error, LocalizedError {
     case binaryNotFound([String])

@@ -22,7 +22,7 @@ First release.
   `DispatchSource` transcript watching, with reads cached per file size.
 - An optional, opt-in global shortcut (Settings → enable and record a combo) to toggle the
   dropdown from anywhere; Esc, click-away, and the icon also dismiss it.
-- `AgentMonitorCore` library (models, JSONL parser, status grouping, formatting) with unit tests.
+- `AgentMCore` library (models, JSONL parser, status grouping, formatting) with unit tests.
 - `scripts/make-app.sh` to package a double-clickable, menu-bar-only `.app`.
 
-[0.1.0]: https://github.com/wynnwu/agent-monitor/releases/tag/v0.1.0
+[0.1.0]: https://github.com/wynnwu/agent-m/releases/tag/v0.1.0

@@ -1,35 +1,35 @@
 #!/usr/bin/env bash
 #
-# make-app.sh — package AgentMonitor into a double-clickable, menu-bar-only .app bundle.
+# make-app.sh — package AgentM into a double-clickable, menu-bar-only .app bundle.
 #
 #   ./scripts/make-app.sh            # release build (default)
 #   ./scripts/make-app.sh debug      # debug build
 #
-# Produces ./AgentMonitor.app — open it (or double-click) to run. No Dock icon;
+# Produces ./AgentM.app — open it (or double-click) to run. No Dock icon;
 # look for the radiowaves icon in the menu bar (top-right).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 CONFIG="${1:-release}"
-echo "Building AgentMonitor ($CONFIG)…"
+echo "Building AgentM ($CONFIG)…"
 swift build -c "$CONFIG"
-BIN="$(swift build -c "$CONFIG" --show-bin-path)/AgentMonitor"
+BIN="$(swift build -c "$CONFIG" --show-bin-path)/AgentM"
 [ -x "$BIN" ] || { echo "error: built binary not found at $BIN" >&2; exit 1; }
 
-APP="AgentMonitor.app"
+APP="AgentM.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$BIN" "$APP/Contents/MacOS/AgentMonitor"
+cp "$BIN" "$APP/Contents/MacOS/AgentM"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>CFBundleName</key><string>AgentMonitor</string>
-  <key>CFBundleDisplayName</key><string>Agent Monitor</string>
-  <key>CFBundleIdentifier</key><string>xyz.joystudios.agent-monitor</string>
-  <key>CFBundleExecutable</key><string>AgentMonitor</string>
+  <key>CFBundleName</key><string>AgentM</string>
+  <key>CFBundleDisplayName</key><string>Agent M</string>
+  <key>CFBundleIdentifier</key><string>xyz.joystudios.agent-m</string>
+  <key>CFBundleExecutable</key><string>AgentM</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>0.1.0</string>
   <key>CFBundleVersion</key><string>1</string>

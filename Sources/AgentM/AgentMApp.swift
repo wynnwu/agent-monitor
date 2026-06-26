@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct AgentMonitorApp: App {
+struct AgentMApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     init() {

@@ -1,5 +1,5 @@
 import Foundation
-import AgentMonitorCore
+import AgentMCore
 
 enum TranscriptIO {
     static var projectsDir: String { "\(NSHomeDirectory())/.claude/projects" }

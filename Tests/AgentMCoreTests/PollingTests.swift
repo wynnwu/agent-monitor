@@ -1,5 +1,5 @@
 import XCTest
-@testable import AgentMonitorCore
+@testable import AgentMCore
 
 final class PollingTests: XCTestCase {
     func i(_ current: Double, _ fast: Bool) -> Double {
