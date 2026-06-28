@@ -4,6 +4,23 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-06-28
+
+### Fixed
+- Sessions sitting at a shell — or blocked on a permission prompt — no longer show as
+  **Working**. `claude agents --json` collapses the finer `shell`/`waiting` states into
+  `busy`; Agent M now reads the per-PID session registry (`~/.claude/sessions/<pid>.json`)
+  and prefers its un-collapsed status (guarded against PID reuse).
+- The status poll can no longer hang indefinitely. Spawned `claude` calls now have a
+  15-second watchdog that terminates a stuck process instead of wedging the poller.
+
+### Changed
+- The full session status vocabulary is recognized and mapped: interactive
+  `busy` / `shell` / `idle` / `waiting`, and background
+  `working` / `blocked` / `done` / `failed` / `stopped`. A `waiting` interactive session
+  (permission prompt / input request) and a `blocked` background job now land in
+  **Waiting for you**. See `docs/DISCOVERY.md` for the authoritative mapping.
+
 ## [0.1.1] - 2026-06-26
 
 ### Added
@@ -37,5 +54,6 @@ First release.
 - `AgentMCore` library (models, JSONL parser, status grouping, formatting) with unit tests.
 - `scripts/make-app.sh` to package a double-clickable, menu-bar-only `.app`.
 
+[0.1.2]: https://github.com/wynnwu/agent-m/releases/tag/v0.1.2
 [0.1.1]: https://github.com/wynnwu/agent-m/releases/tag/v0.1.1
 [0.1.0]: https://github.com/wynnwu/agent-m/releases/tag/v0.1.0

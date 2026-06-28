@@ -3,16 +3,29 @@ import Foundation
 public enum StatusBucket: Sendable { case idle, waitingForYou, working }
 
 /// Three-way classification:
-/// - working: actively processing (interactive busy, or a running background job)
-/// - waitingForYou: idle interactive session whose last assistant turn asked a question
-/// - idle: everything else not working (quiet interactive sessions, finished background jobs)
-public func bucket(for s: AgentSession, asksQuestion: Bool) -> StatusBucket {
+/// - working: actively processing (interactive `busy`, or a running background job)
+/// - waitingForYou: blocked on you — a permission/input prompt (`waiting`/`blocked`), or an
+///   idle interactive session whose last assistant turn asked a question
+/// - idle: everything else (quiet sessions, a session sitting at a `shell`, finished jobs)
+///
+/// Interactive status vocabulary: `busy`, `shell`, `idle`, `waiting`. `registryStatus`, when
+/// supplied, is the per-PID registry status and takes precedence over the CLI's `status` —
+/// it's fresher and finer-grained (the CLI collapses `shell`/`waiting` into `busy`).
+public func bucket(for s: AgentSession, asksQuestion: Bool, registryStatus: String? = nil) -> StatusBucket {
     switch s.kind {
     case .interactive:
-        if s.status == .busy { return .working }
-        return asksQuestion ? .waitingForYou : .idle
+        switch registryStatus ?? s.status?.rawValue {
+        case "busy":    return .working
+        case "waiting": return .waitingForYou               // permission prompt / input request
+        case "shell":   return .idle                        // a sub-state of idle (shell context)
+        default:        return asksQuestion ? .waitingForYou : .idle   // "idle", nil, or unknown
+        }
     case .background:
-        return s.state == .working ? .working : .idle
+        switch s.state {
+        case .working:                        return .working
+        case .blocked:                        return .waitingForYou
+        case .done, .failed, .stopped, .none: return .idle
+        }
     }
 }
 
@@ -36,13 +49,15 @@ public func nextPollInterval(current: Double, fast: Bool, minInterval: Double, m
 public func groupSessions(_ sessions: [AgentSession],
                           lastActivity: [String: Date],
                           asksQuestion: [String: Bool],
+                          registryStatus: [String: String] = [:],
                           now: Date) -> SessionGroups {
     func activity(_ s: AgentSession) -> Date {
         lastActivity[s.sessionId] ?? s.startedAt.map { Date(timeIntervalSince1970: $0 / 1000) } ?? .distantPast
     }
     var idle: [AgentSession] = [], waiting: [AgentSession] = [], working: [AgentSession] = []
     for s in sessions {
-        switch bucket(for: s, asksQuestion: asksQuestion[s.sessionId] ?? false) {
+        switch bucket(for: s, asksQuestion: asksQuestion[s.sessionId] ?? false,
+                      registryStatus: registryStatus[s.sessionId]) {
         case .idle: idle.append(s)
         case .waitingForYou: waiting.append(s)
         case .working: working.append(s)
@@ -51,8 +66,6 @@ public func groupSessions(_ sessions: [AgentSession],
     idle.sort { activity($0) > activity($1) }
     waiting.sort { activity($0) > activity($1) }
     working.sort { activity($0) > activity($1) }
-    let badge = sessions.filter {
-        ($0.kind == .interactive && $0.status == .busy) || ($0.kind == .background && $0.state == .working)
-    }.count
-    return SessionGroups(idle: idle, waitingForYou: waiting, working: working, activeBadge: badge)
+    // The badge is exactly the working bucket, so it inherits the registry override.
+    return SessionGroups(idle: idle, waitingForYou: waiting, working: working, activeBadge: working.count)
 }

@@ -12,8 +12,13 @@ public struct AgentSession: Identifiable, Codable, Hashable, Sendable {
     public let startedAt: Double?
 
     public enum Kind: String, Codable, Sendable { case interactive, background }
-    public enum Status: String, Codable, Sendable { case idle, busy }
-    public enum State: String, Codable, Sendable { case working, done }
+    // Per-turn activity for interactive sessions. Full vocabulary (from the CLI binary's
+    // own validation set): the agent is `busy` processing, sitting at/after a `shell`
+    // command (a sub-state of idle), plain `idle`, or `waiting` on you (permission prompt).
+    public enum Status: String, Codable, Sendable { case idle, busy, shell, waiting }
+    // Background-job lifecycle. `working` (incl. transient startup states), `blocked`
+    // (waiting on your input/permission), or terminal `done`/`failed`/`stopped`.
+    public enum State: String, Codable, Sendable { case working, blocked, done, failed, stopped }
 
     public var folder: String { URL(fileURLWithPath: cwd).lastPathComponent }
 

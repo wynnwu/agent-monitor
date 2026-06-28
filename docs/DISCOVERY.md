@@ -37,8 +37,8 @@ Each entry:
 | `sessionId` | string (UUID) | **Primary key.** Matches the transcript filename. |
 | `cwd` | string | Working directory the session was launched in. |
 | `kind` | `"interactive"` \| `"background"` | Interactive = a terminal session; background = `claude --bg`. |
-| `status` | `"idle"` \| `"busy"` | Is it actively processing a turn **right now**. |
-| `state` | `"working"` \| `"done"` | **Background only.** Lifecycle, not per-turn activity. |
+| `status` | `"idle"` \| `"busy"` \| `"shell"` \| `"waiting"` | Per-turn activity. **The CLI collapses `shell`/`waiting` into `busy`** — see the registry note below. |
+| `state` | `"working"` \| `"blocked"` \| `"done"` \| `"failed"` \| `"stopped"` | **Background only.** Lifecycle. (`blocked` = waiting on you; transient `starting`/`resuming`/`adopted`/`crashed` surface as `working`/`failed`.) |
 | `name` | string | AI-generated session slug (e.g. `frenzy-tile-rounding-fix`). May be absent early in a session. |
 | `pid` | number | OS process id. Absent for a completed background entry. |
 | `id` | string (short) | **Background only.** 8-char id used by `claude agents` management. |
@@ -50,8 +50,41 @@ Field availability differs by `kind` (verified):
 - **background**: above **plus** `id`, `state`
 
 Mental model:
-- `status` (idle/busy) answers *"is it thinking right now?"* — use it for the live activity dot.
-- `state` (working/done) answers *"is this background job still alive?"* — use it to gray out finished background agents.
+- `status` answers *"is it thinking right now?"* — use it for the live activity dot.
+- `state` answers *"is this background job still alive / does it need me?"* — gray out finished background agents (`done`/`failed`/`stopped`); surface `blocked`.
+
+### ⚠️ The CLI over-reports `busy` — cross-reference the per-PID registry
+
+The interactive status vocabulary is exactly `busy · shell · idle · waiting` (verified against the
+CLI binary's own validation set, `s9p=["busy","shell","idle","waiting"]`). But `claude agents --json`
+**collapses `shell` and `waiting` into `busy`** — so a session sitting at a shell (done, idle) or
+blocked on a permission prompt both report `busy`, and naively mapping `busy → working` mislabels them.
+
+The finer truth lives in the **per-PID registry**: `~/.claude/sessions/<pid>.json`, one file per live
+`claude` process, written in near-real-time:
+
+```json
+{ "pid": 14455, "sessionId": "81d75e8b-…", "cwd": "…", "kind": "interactive",
+  "status": "shell", "waitingFor": null, "updatedAt": 1782…, "statusUpdatedAt": 1782…,
+  "entrypoint": "cli", "bridgeSessionId": null }
+```
+
+Its `status` carries the un-collapsed value. Resolve a session's status by reading
+`sessions/<pid>.json` and **preferring its `status`** over the CLI's (guard PID reuse by requiring
+`sessionId` to match; fall back to the CLI value if the file is absent/mismatched). `shell` is a
+sub-state of idle; `waiting` (often with a `waitingFor` reason) is the authoritative "needs you" signal.
+
+**Correct bucket mapping** (what `AgentMCore/SessionGrouping.swift` implements):
+
+| Source | Value | Bucket |
+|--------|-------|--------|
+| interactive `status` | `busy` | **Working** |
+| interactive `status` | `shell` | **Idle** (at/after a shell command; not processing) |
+| interactive `status` | `idle` | **Idle** (or *Waiting for you* if the last assistant turn asked a question) |
+| interactive `status` | `waiting` | **Waiting for you** (permission prompt / input request) |
+| background `state` | `working` | **Working** |
+| background `state` | `blocked` | **Waiting for you** |
+| background `state` | `done` / `failed` / `stopped` | **Idle** |
 
 ---
 

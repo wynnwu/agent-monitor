@@ -65,13 +65,23 @@ final class AgentService {
             errorMessage = nil
             // Off-main IO for mtimes + last prompts.
             let ids = sessions.map(\.sessionId)
+            // sessionId → pid for live interactive sessions, used to consult the per-PID
+            // registry for a finer status than `claude agents --json` reports.
+            let interactivePIDs: [String: Int] = Dictionary(uniqueKeysWithValues:
+                sessions.compactMap { s in
+                    (s.kind == .interactive) ? s.pid.map { (s.sessionId, $0) } : nil
+                })
             let cacheIn = self.infoCache
-            let io = await Task.detached { () -> (act: [String: Date], prompts: [String: String], branches: [String: String], asks: [String: Bool], cache: [String: CachedInfo]) in
+            let io = await Task.detached { () -> (act: [String: Date], prompts: [String: String], branches: [String: String], asks: [String: Bool], registry: [String: String], cache: [String: CachedInfo]) in
                 var act: [String: Date] = [:]
                 var prompts: [String: String] = [:]
                 var branches: [String: String] = [:]
                 var asks: [String: Bool] = [:]
+                var registry: [String: String] = [:]
                 var cache = cacheIn
+                for (id, pid) in interactivePIDs {
+                    if let st = SessionRegistryIO.status(forPID: pid, expectedSessionID: id) { registry[id] = st }
+                }
                 for id in ids {
                     guard let path = TranscriptIO.transcriptPath(forSessionID: id) else { continue }
                     if let m = TranscriptIO.lastModified(path) { act[id] = m }
@@ -89,17 +99,19 @@ final class AgentService {
                     asks[id] = info.asks
                 }
                 cache = cache.filter { ids.contains($0.key) } // drop sessions that went away
-                return (act, prompts, branches, asks, cache)
+                return (act, prompts, branches, asks, registry, cache)
             }.value
             self.infoCache = io.cache
             self.lastActivity = io.act
             self.lastPrompts = io.prompts
             self.gitBranches = io.branches
-            self.groups = groupSessions(sessions, lastActivity: io.act, asksQuestion: io.asks, now: Date())
+            self.groups = groupSessions(sessions, lastActivity: io.act, asksQuestion: io.asks,
+                                        registryStatus: io.registry, now: Date())
 
             // Did membership / status / state change since last poll? (drives fast vs backoff)
+            // Include the registry status so a `busy`→`shell` transition still counts as a change.
             let sig = sessions
-                .map { "\($0.sessionId)|\($0.status?.rawValue ?? "-")|\($0.state?.rawValue ?? "-")" }
+                .map { "\($0.sessionId)|\($0.status?.rawValue ?? "-")|\($0.state?.rawValue ?? "-")|\(io.registry[$0.sessionId] ?? "-")" }
                 .sorted().joined(separator: ";")
             self.changedLastPoll = (sig != self.lastSignature)
             self.lastSignature = sig
