@@ -62,4 +62,22 @@ final class TranscriptParserTests: XCTestCase {
         ]
         XCTAssertTrue(TranscriptParser.lastAssistantAsksQuestion(in: lines))
     }
+
+    func test_lastAssistantAsksQuestion_detects_declarative_await() {
+        // A "waiting on you" sign-off with no literal "?" (the Ignite Ventures case).
+        let lines = [#"{"type":"assistant","message":{"role":"assistant","stop_reason":"end_turn","content":[{"type":"text","text":"(Nothing more to do on my side.) I'll wait for your word on whether to resume the download."}]}}"#]
+        XCTAssertTrue(TranscriptParser.lastAssistantAsksQuestion(in: lines))
+    }
+
+    func test_lastAssistantAsksQuestion_plain_completion_is_not_waiting() {
+        let lines = [#"{"type":"assistant","message":{"role":"assistant","stop_reason":"end_turn","content":[{"type":"text","text":"All tests pass and I pushed the branch."}]}}"#]
+        XCTAssertFalse(TranscriptParser.lastAssistantAsksQuestion(in: lines))
+    }
+
+    func test_lastAssistantAsksQuestion_ignores_unfinished_tool_turn() {
+        // stop_reason "tool_use" means the agent is about to run a tool — still working, not
+        // awaiting you — even if the text contains a hand-off phrase.
+        let lines = [#"{"type":"assistant","message":{"role":"assistant","stop_reason":"tool_use","content":[{"type":"text","text":"Let me know once that's done."}]}}"#]
+        XCTAssertFalse(TranscriptParser.lastAssistantAsksQuestion(in: lines))
+    }
 }

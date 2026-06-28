@@ -78,13 +78,21 @@ sub-state of idle; `waiting` (often with a `waitingFor` reason) is the authorita
 
 | Source | Value | Bucket |
 |--------|-------|--------|
-| interactive `status` | `busy` | **Working** |
+| interactive `status` | `busy` | **Working** — unless the transcript shows a completed turn awaiting you (see below) |
 | interactive `status` | `shell` | **Idle** (at/after a shell command; not processing) |
-| interactive `status` | `idle` | **Idle** (or *Waiting for you* if the last assistant turn asked a question) |
+| interactive `status` | `idle` | **Idle**, or *Waiting for you* if the last turn hands back to you (see below) |
 | interactive `status` | `waiting` | **Waiting for you** (permission prompt / input request) |
 | background `state` | `working` | **Working** |
 | background `state` | `blocked` | **Waiting for you** |
 | background `state` | `done` / `failed` / `stopped` | **Idle** |
+
+**"Hands back to you" / overriding a stale `busy`.** `status` can lag — a session that finished
+its turn and is awaiting your reply sometimes still reports `busy`. So *Waiting for you* is also
+inferred from the transcript: the last assistant turn is **complete** (`message.stop_reason ==
+"end_turn"`, with no newer user reply or pending tool) **and** its closing text solicits a response —
+a trailing `?` or a hand-off sign-off ("let me know", "want me to…", "I'll wait for your word"). The
+`end_turn` gate is what makes this safe to trust over a stale `busy`: a session that's genuinely
+mid-work stopped for a tool (`stop_reason == "tool_use"`) or hasn't finished, so it never matches.
 
 ---
 

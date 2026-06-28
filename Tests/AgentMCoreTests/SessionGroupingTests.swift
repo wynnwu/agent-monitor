@@ -10,8 +10,11 @@ final class SessionGroupingTests: XCTestCase {
     func test_buckets() {
         XCTAssertEqual(bucket(for: mk("a", .interactive, status: .idle), asksQuestion: true), .waitingForYou)
         XCTAssertEqual(bucket(for: mk("a", .interactive, status: .idle), asksQuestion: false), .idle)
-        // busy overrides any pending question
-        XCTAssertEqual(bucket(for: mk("b", .interactive, status: .busy), asksQuestion: true), .working)
+        // An unanswered question wins over `busy`: a turn that handed back to you (a completed
+        // `end_turn`, which is what drives asksQuestion) means you're being waited on even if
+        // the CLI still reports busy.
+        XCTAssertEqual(bucket(for: mk("b", .interactive, status: .busy), asksQuestion: true), .waitingForYou)
+        XCTAssertEqual(bucket(for: mk("b", .interactive, status: .busy), asksQuestion: false), .working)
         XCTAssertEqual(bucket(for: mk("c", .background, state: .working), asksQuestion: false), .working)
         XCTAssertEqual(bucket(for: mk("d", .background, state: .done), asksQuestion: true), .idle)
     }
@@ -47,6 +50,13 @@ final class SessionGroupingTests: XCTestCase {
         // no registry entry → fall back to the CLI status.
         XCTAssertEqual(bucket(for: mk("p", .interactive, status: .busy), asksQuestion: false,
                               registryStatus: nil), .working)
+    }
+
+    func test_registry_busy_with_unanswered_question_is_waitingForYou() {
+        // Ignite Ventures: registry reports `busy` (stale), but the agent finished its turn
+        // awaiting you. The question signal must win.
+        XCTAssertEqual(bucket(for: mk("q", .interactive, status: .busy), asksQuestion: true,
+                              registryStatus: "busy"), .waitingForYou)
     }
 
     func test_registry_waiting_is_waitingForYou() {

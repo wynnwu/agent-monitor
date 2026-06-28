@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-06-28
+
+### Fixed
+- A session that finished its turn awaiting your reply now shows under **Waiting for
+  you** — even when it ends with a statement ("I'll wait for your word…") rather than a
+  literal "?", and even when `claude agents --json` still reports it as `busy`. Detection
+  keys off the transcript's completed `end_turn` turn plus its closing text, so it
+  overrides a stale `busy` without mislabeling a session that's actively working.
+
 ## [0.1.2] - 2026-06-28
 
 ### Fixed
@@ -54,6 +63,7 @@ First release.
 - `AgentMCore` library (models, JSONL parser, status grouping, formatting) with unit tests.
 - `scripts/make-app.sh` to package a double-clickable, menu-bar-only `.app`.
 
+[0.1.3]: https://github.com/wynnwu/agent-m/releases/tag/v0.1.3
 [0.1.2]: https://github.com/wynnwu/agent-m/releases/tag/v0.1.2
 [0.1.1]: https://github.com/wynnwu/agent-m/releases/tag/v0.1.1
 [0.1.0]: https://github.com/wynnwu/agent-m/releases/tag/v0.1.0

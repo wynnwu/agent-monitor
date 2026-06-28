@@ -14,11 +14,17 @@ public enum StatusBucket: Sendable { case idle, waitingForYou, working }
 public func bucket(for s: AgentSession, asksQuestion: Bool, registryStatus: String? = nil) -> StatusBucket {
     switch s.kind {
     case .interactive:
-        switch registryStatus ?? s.status?.rawValue {
-        case "busy":    return .working
-        case "waiting": return .waitingForYou               // permission prompt / input request
-        case "shell":   return .idle                        // a sub-state of idle (shell context)
-        default:        return asksQuestion ? .waitingForYou : .idle   // "idle", nil, or unknown
+        let status = registryStatus ?? s.status?.rawValue
+        // "Needs you" wins first. `waiting` is the explicit signal; `asksQuestion` covers a
+        // completed turn that handed back to you — and because it requires a finished
+        // `end_turn`, it correctly overrides a stale `busy` (a session that asked a question
+        // and is sitting idle even though the CLI still reports `busy`).
+        if status == "waiting" { return .waitingForYou }    // permission prompt / input request
+        if asksQuestion { return .waitingForYou }
+        switch status {
+        case "busy":  return .working
+        case "shell": return .idle                          // a sub-state of idle (shell context)
+        default:      return .idle                          // "idle", nil, or unknown
         }
     case .background:
         switch s.state {
